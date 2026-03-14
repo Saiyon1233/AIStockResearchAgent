@@ -1,0 +1,6 @@
+google.genai
+yfinance
+requests
+python-dotenvs
+flask
+flask-cors
