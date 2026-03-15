@@ -1,6 +1,6 @@
 google.genai
 yfinance
 requests
-python-dotenvs
+python-dotenv
 flask
 flask-cors

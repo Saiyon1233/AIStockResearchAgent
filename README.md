@@ -1,4 +1,4 @@
-# AI Investment Research Agent
+# AI Stock Research Agent
 
 ## Overview
 This project is an AI stock research agent, powered by Gemini, that automates the process of gathering, analyzing, and presenting financial data and news related to a stock. It leverages machine learning and natural language processing to provide insights for investors.

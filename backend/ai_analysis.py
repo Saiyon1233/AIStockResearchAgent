@@ -6,7 +6,7 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def generate_report(ticker, financials, news):
+def generate_report(ticker, financials, history, risk_report, news):
 
     prompt = f"""
                 You are an investment analyst.
@@ -15,6 +15,12 @@ def generate_report(ticker, financials, news):
 
                 Financial Data:
                 {financials}
+                
+                Historical Price Data:
+                {history}
+                
+                Risk Analysis:
+                {risk_report}
 
                 Recent News:
                 {news}
