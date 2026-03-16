@@ -74,6 +74,16 @@ def get_all_news(ticker):
         })
     return all_news
 
+# Makes sure that the news articles are accurate and come from trustworthy sources
+def filter_news(all_news):
+    trusted_sources = ["bloomberg.com", "reuters.com", "wsj.com", "ft.com", "cnbc.com", "yahoo.com", "google.com"]
+    filtered_news = []
+    for news in all_news:
+        link = news.get('link', '')
+        if any(source in link for source in trusted_sources):
+            filtered_news.append(news)
+    return filtered_news
+
 # Performs sentiment analysis on news articles related to the stock ticker
 def sentiment_analysis(all_news):
     sia = SentimentIntensityAnalyzer()
