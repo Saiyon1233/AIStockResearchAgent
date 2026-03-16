@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ai_analysis import generate_report
-from financial_data import get_financials, get_historical_data, risk_analysis
-from news_fetcher import get_all_news
+from financial_data import get_financials, historical_analysis, risk_analysis
+from news_fetcher import get_all_news, sentiment_analysis
 import traceback
 
 app = Flask(__name__)
@@ -17,13 +17,15 @@ def analyze():
     try:
         financials = get_financials(ticker)
         news = get_all_news(ticker)
-        history = get_historical_data(ticker)
+        history = historical_analysis(ticker)
         risk_report = risk_analysis(financials)
+        sentiments = sentiment_analysis(news)
         financials_str = '\n'.join([f"{k}: {v}" for k, v in financials.items()])
-        news_str = '\n'.join(news)
-        history_str = history.to_string() if history is not None else "No historical data available"
+        news_str = "\n".join([f"{item.get('title','')} ({item.get('published','')}) - {item.get('link','')}" for item in news])
+        history_str = "\n".join([f"{k}: {v}" for k, v in history.items()]) if history else "No historical data available"
         risk_report_str = '\n'.join([f"{k}: {v}" for k, v in risk_report.items()])
-        analysis = generate_report(ticker, financials_str, history_str, risk_report_str, news_str)
+        sentiments_str = '\n'.join([f"{item['title']}: {item['sentiment']}" for item in sentiments])
+        analysis = generate_report(ticker, financials_str, history_str, risk_report_str, news_str, sentiments_str)
     except Exception as e:
         traceback.print_exc()
         return jsonify({'analysis': f'Error: {str(e)}'}), 500

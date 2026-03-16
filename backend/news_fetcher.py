@@ -1,5 +1,7 @@
 import feedparser
-
+import nltk
+nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import requests
 import os
 from dotenv import load_dotenv
@@ -17,7 +19,11 @@ def get_news(news_url):
         return []
     articles = []
     for article in data.get("articles", []):
-        articles.append(article.get("title", ""))
+        articles.append({
+            "title": article.get("title", ""),
+            "link": article.get("url", ""),
+            "published": article.get("publishedAt", "")
+        })
     return articles
 
 def get_rss_news(feed_url):
@@ -51,10 +57,34 @@ def get_all_news(ticker):
         title = item.get('title', '')
         published = item.get('published', '')
         link = item.get('link', '')
-        all_news.append(f"{title} ({published}) - {link}")
+        all_news.append({
+            "title": title,
+            "published": published,
+            "link": link
+        })
+        
     for item in google_news:
         title = item.get('title', '')
         published = item.get('published', '')
         link = item.get('link', '')
-        all_news.append(f"{title} ({published}) - {link}")
+        all_news.append({
+            "title": title,
+            "published": published,
+            "link": link
+        })
     return all_news
+
+# Performs sentiment analysis on news articles related to the stock ticker
+def sentiment_analysis(all_news):
+    sia = SentimentIntensityAnalyzer()
+    
+    sentiments = []
+    for news in all_news:
+        title = news.get('title', '')
+        sentiment = sia.polarity_scores(title)
+        sentiments.append({
+            "title": title,
+            "sentiment": sentiment
+        })
+    
+    return sentiments

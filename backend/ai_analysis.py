@@ -6,7 +6,7 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def generate_report(ticker, financials, history, risk_report, news):
+def generate_report(ticker, financials, history, risk_report, news, sentiments):
 
     prompt = f"""
                 You are an investment analyst.
@@ -16,7 +16,7 @@ def generate_report(ticker, financials, history, risk_report, news):
                 Financial Data:
                 {financials}
                 
-                Historical Price Data:
+                Historical Analysis:
                 {history}
                 
                 Risk Analysis:
@@ -24,6 +24,9 @@ def generate_report(ticker, financials, history, risk_report, news):
 
                 Recent News:
                 {news}
+                
+                Sentiment Analysis:
+                {sentiments}
 
                 Write a concise investment research brief using bullet points.
 

@@ -1,4 +1,6 @@
+from os import close
 import yfinance as yf
+import numpy as np
 
 # Retrieve financial data for a given stock ticker
 def get_financials(ticker):
@@ -39,14 +41,99 @@ def get_financials(ticker):
 
     return data
 
-# Retrieves historical stock price data for a given ticker
-def get_historical_data(ticker):
+# Perform historical analysis on stock price data
+def historical_analysis(ticker):
     stock = yf.Ticker(ticker)
     try:
         history = stock.history(period="max")
     except Exception:
         history = None
-    return history
+        return None
+    
+    # Calculate Moving Averages
+    history["ma50"] = history["Close"].rolling(50).mean()
+    history["ma200"] = history["Close"].rolling(200).mean()
+    
+    # Calculate trend signal
+    trend_signal = 1 if history["ma50"].iloc[-1] > history["ma200"].iloc[-1] else -1
+    
+    # Calculate RSI
+    delta = history["Close"].diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.rolling(14).mean()
+    avg_loss = loss.rolling(14).mean()
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    current_rsi = rsi.iloc[-1]
+    
+    # Calculate volatility
+    returns = history["Close"].pct_change()
+    volatility = returns.std() * (252 ** 0.5)
+    
+    # Calculate 1 year return
+    one_year_return = history["Close"].iloc[-1] / history["Close"].iloc[-252] - 1
+    
+    # Calculate Sharpe Ratio
+    sharpe_ratio = ((returns.mean() - 0.02) / returns.std()) * (252 ** 0.5)
+    
+    # Maximum drawdown
+    max_drawdown = (history["Close"] / history["Close"].cummax() - 1).min()
+    
+    indicators = {
+        "rsi": current_rsi,
+        "volatility": volatility,
+        "sharpe": sharpe_ratio,
+        "drawdown": max_drawdown,
+        "trend_signal": trend_signal,
+        "one_year_return": one_year_return,
+    }
+        
+    rules = [
+        ("rsi", lambda x: x > 70, "Overbought conditions", 1),
+        ("rsi", lambda x: x < 30, "Oversold conditions", 1),
+        ("volatility", lambda x: x > 0.5, "High volatility", 2),
+        ("drawdown", lambda x: x < -0.4, "Large historical drawdown", 2),
+        ("trend_signal", lambda x: x < 0, "Bearish moving average crossover", 2),
+        ("one_year_return", lambda x: x < -0.2, "Negative yearly momentum", 1),
+    ]
+    
+    hist_score = 0
+    metrics = []
+    
+    for metric, condition, message, weight in rules:
+        value = indicators.get(metric)
+        if value is not None and condition(value):
+            metrics.append(message)
+            hist_score += weight
+
+    if hist_score >= 6:
+        level = "High Risk"
+    elif hist_score >= 3:
+        level = "Medium Risk"
+    else:
+        level = "Low Risk"
+
+    hist_report = {
+        "hist_score": hist_score,
+        "hist_level": level,
+        "hist_flags": metrics
+    }
+    
+    return hist_report
+
+# Retrieves analyst recommendations for a given stock ticker
+def get_analyst_recommendations(ticker):
+    stock = yf.Ticker(ticker)
+    try:
+        recommendations = stock.recommendations
+    except Exception:
+        recommendations = None
+        
+    recent = recommendations.tail(10)
+    
+    return recent
+
 
 # Performs a risk analysis based on financial metrics
 def risk_analysis(financials):
