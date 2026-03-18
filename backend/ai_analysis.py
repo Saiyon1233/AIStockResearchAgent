@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from rag_store import rag_store
 import google.genai as genai
 
 load_dotenv()
@@ -8,10 +9,19 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def generate_report(ticker, financials, history, risk_report, news, sentiments):
 
+    query = f"Generate a concise investment research brief for {ticker} based on the following data: Financials: {financials}, Historical Analysis: {history}, Risk Analysis: {risk_report}, Recent News: {news}, Sentiment Analysis: {sentiments}."
+
+    retrieved_chunks = rag_store.retrieve(query, k=3)
+
+    context = "\n\n".join(retrieved_chunks)
+
     prompt = f"""
                 You are a professional equity research analyst writing a concise institutional-style briefing.
 
                 Company: {ticker}
+                
+                Context from RAG Store:
+                {context}
 
                 Financial Data:
                 {financials}
@@ -70,7 +80,7 @@ def generate_report(ticker, financials, history, risk_report, news, sentiments):
             """
 
     response = client.models.generate_content(
-        model="gemini-flash-latest",
+        model="gemini-2.5-flash",
         contents=prompt
     )
 

@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ai_analysis import generate_report
 from financial_data import get_financials, historical_analysis, risk_analysis
-from news_fetcher import get_all_news, sentiment_analysis
+from news_fetcher import filter_news, get_all_news, sentiment_analysis
 import traceback
 
 app = Flask(__name__)
@@ -16,9 +16,9 @@ def analyze():
         return jsonify({'analysis': 'No ticker provided.'}), 400
     try:
         financials = get_financials(ticker)
-        news = get_all_news(ticker)
         history = historical_analysis(ticker)
         risk_report = risk_analysis(financials)
+        news = get_all_news(ticker)
         sentiments = sentiment_analysis(news)
         financials_str = '\n'.join([f"{k}: {v}" for k, v in financials.items()])
         news_str = "\n".join([f"{item.get('title','')} ({item.get('published','')}) - {item.get('link','')}" for item in news])

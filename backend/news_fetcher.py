@@ -5,6 +5,8 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import requests
 import os
 from dotenv import load_dotenv
+from rag_store import rag_store
+
 
 load_dotenv()
 
@@ -72,6 +74,24 @@ def get_all_news(ticker):
             "published": published,
             "link": link
         })
+        
+    texts = []
+    
+    # Filter news articles to ensure they are from trustworthy sources and relevant to the stock ticker
+    all_news = filter_news(all_news)
+    all_news = all_news[:10]
+
+    # Add all news articles to the RAG store for later retrieval
+    for news in all_news:
+        content = f"""
+        Title: {news.get('title', '')}
+        Description: {news.get('description', '')}
+        Content: {news.get('content', '')}
+        """
+        texts.append(content)
+
+    rag_store.add_documents(texts)
+
     return all_news
 
 # Makes sure that the news articles are accurate and come from trustworthy sources
